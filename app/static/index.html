@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-source="{{DATA_SOURCE}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Movie QA Lab</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <!-- THESIS: A light, minimal catalog for inspecting films and predictable pagination.
+       OWN-WORLD: White and slate, restrained blue controls, locally authored flat poster art.
+       STORY: Identify the data source, browse films, move between pages.
+       FIRST VIEWPORT: Compact title and mode, catalog summary, four-column poster grid.
+       FORM: User-pinned neutral catalog; seed ccbc3e78 yields to the explicit minimal brief.
+       FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
+  <header class="site-header">
+    <div class="header-content">
+      <div class="identity"><h1>Movie QA Lab</h1><span class="mode">{{MODE_LABEL}}</span></div>
+      <a href="/docs">API docs</a>
+    </div>
+  </header>
+  <main>
+    <div class="catalog-heading"><h2>Movie catalog</h2><p id="summary">Browse one page at a time.</p></div>
+    <p class="demo-note" data-fixture-only>Fictional films. Fixed data for QA practice.</p>
+    <div id="status" class="status" role="status" aria-live="polite">Loading</div>
+    <section id="movies" class="movie-grid" aria-label="Movies" aria-busy="true"></section>
+    <nav class="pagination" aria-label="Movie pages">
+      <button id="previous" type="button" disabled>Previous</button>
+      <span id="page-label" aria-live="polite">Page 1</span>
+      <button id="next" type="button" disabled>Next</button>
+    </nav>
+  </main>
+  <footer>
+    <h2>Credits / About</h2>
+    <p data-fixture-only>Demo data and poster illustrations are fictional and bundled locally. They are not provided by TMDB.</p>
+    <p data-tmdb-only>Movie data and posters provided by <a href="https://www.themoviedb.org/">The Movie Database (TMDB)</a>.</p>
+    <div class="tmdb-credit">
+      <a href="https://www.themoviedb.org/" aria-label="The Movie Database"><img src="/static/tmdb-logo.svg" alt="TMDB" width="110" height="15"></a>
+      <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    </div>
+    <p data-fixture-only>TMDB is an optional data source; no TMDB requests are made in Demo mode.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-14T08:15:00Z",
+  "title": "Design System: Movie QA Lab",
+  "extensions": {
+    "breakpoints": [
+      {"name":"three-columns","value":"950px"},
+      {"name":"two-columns","value":"680px"},
+      {"name":"one-column","value":"380px"}
+    ],
+    "shadows": [],
+    "motion": []
+  },
+  "components": [
+    {
+      "name":"Pagination button",
+      "kind":"button",
+      "refersTo":"button",
+      "description":"Native outlined page navigation with visible disabled and focus states.",
+      "html":"<button class=\"ds-page\">Next</button>",
+      "css":".ds-page{font:600 14px system-ui;padding:10px 18px;min-height:44px;border:1px solid var(--accent,#2055ad);border-radius:4px;background:white;color:var(--accent,#2055ad);cursor:pointer}.ds-page:hover:not(:disabled){background:#edf3fc}.ds-page:active:not(:disabled){background:#dce8fa}.ds-page:focus-visible{outline:3px solid var(--accent,#2055ad);outline-offset:4px}.ds-page:disabled{border-color:#d9e0e8;color:#697583;background:#edf0f3;cursor:not-allowed}"
+    },
+    {
+      "name":"Data source label",
+      "kind":"chip",
+      "description":"Noninteractive current source badge.",
+      "html":"<span class=\"ds-mode\">Demo data</span>",
+      "css":".ds-mode{font:600 13px system-ui;background:#e8eef6;color:#30465f;padding:4px 10px;border-radius:4px}"
+    }
+  ],
+  "narrative": {
+    "overview":"Light, neutral and minimal, as selected by the user. Content and familiar pagination lead; the page is an operating surface, not a promotional landing page. Local fictional poster illustrations provide visual distinction without external fonts or image services.",
+    "rules": [],
+    "dos":["Do preserve readable titles, visible focus, responsive whole-card reflow and explicit UI states.","Do bundle fixture assets locally and keep synthetic content clearly labelled."],
+    "donts":["Don't expose future functionality as working controls or make cards appear clickable when no details exist.","Don't recolor, stretch or prominently feature the TMDB mark above the application name."]
+  }
+}
