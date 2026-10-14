@@ -1,16 +1,16 @@
 # Movie QA Lab — Iteration 1
 
-Учебный каталог для black-box QA через HTTP. FastAPI отдаёт API и минимальный HTML/CSS/JavaScript frontend с одного origin. Реализован **только MVP**: список фильмов и пагинация. QA самостоятельно пишет `pytest` + `requests`; готовых тестов и решений в репозитории нет.
+A learning catalog for black-box QA over HTTP. FastAPI serves the API and a minimal HTML/CSS/JavaScript frontend from the same origin. **Only the MVP is implemented**: a movie list and pagination. QA writes their own tests using `pytest` and `requests`; no ready-made QA tests or exercise solutions are included.
 
-## Установка и запуск
+## Installation and startup
 
-Требуется **Python 3.12+**. Выполняйте команды из корня репозитория. Установка зависимостей требует доступа к PyPI; после установки fixture-режим работает без внешней сети, API-ключа и внешних ресурсов UI.
+Requires **Python 3.12+**. Run commands from the repository root. Installing dependencies requires access to PyPI; once installed, fixture mode works without an external network connection, an API token, or external UI assets.
 
 macOS / Linux:
 
 ```bash
 cd /path/to/qa-movie-lab
-python3 --version  # должен быть 3.12 или новее; при необходимости используйте python3.12
+python3 --version  # Must be 3.12 or newer; use python3.12 if needed.
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
@@ -29,57 +29,57 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 - UI: http://localhost:8000/
 - Swagger UI: http://localhost:8000/docs
 - OpenAPI JSON: http://localhost:8000/openapi.json
-- Остановка: **Ctrl+C**, затем `deactivate`, если нужно выйти из venv.
-- Для разработки можно добавить `--reload`. Для HTTP-проверок используйте запуск без reload.
-- `/docs` использует стандартные CDN-ресурсы Swagger UI: HTML и OpenAPI доступны локально, но интерактивный интерфейс требует сети либо кешированных ресурсов. Сам каталог в fixture полностью локален.
+- Stop the server with **Ctrl+C**. Run `deactivate` to leave the virtual environment if needed.
+- Add `--reload` during development if desired. For HTTP checks, run without reload.
+- `/docs` uses the standard Swagger UI CDN assets: its HTML and the OpenAPI schema are available locally, but the interactive interface requires a network connection or cached assets. The catalog itself is fully local in fixture mode.
 
-## Конфигурация
+## Configuration
 
-| Переменная | По умолчанию | Значение |
+| Variable | Default | Meaning |
 | --- | --- | --- |
-| `DATA_SOURCE` | `fixture` | `fixture` или `tmdb`; другое значение — ошибка запуска |
-| `TMDB_READ_TOKEN` | пусто | TMDB API Read Access Token, нужен только для `tmdb` |
+| `DATA_SOURCE` | `fixture` | `fixture` or `tmdb`; other values cause a startup error |
+| `TMDB_READ_TOKEN` | empty | TMDB API Read Access Token; required only for `tmdb` |
 
-Переменные читаются при запуске. `.env` **не подхватывается автоматически**. Для него:
+Variables are read at startup. `.env` is **not loaded automatically**. To use it:
 
 ```bash
 cp .env.example .env
-# Измените .env при необходимости; не публикуйте его.
+# Edit .env as needed; do not publish it.
 python -m uvicorn app.main:app --env-file .env --host 127.0.0.1 --port 8000
 ```
 
-Внешние environment variables имеют приоритет над `.env`. Не коммитьте токен и не вставляйте его в URL или frontend.
+Existing environment variables take precedence over `.env`. Do not commit the token or put it in URLs or frontend code.
 
-### Переключение на TMDB
+### Switching to TMDB
 
-1. Зарегистрируйтесь на [TMDB](https://www.themoviedb.org/).
-2. В [Settings → API](https://www.themoviedb.org/settings/api) запросите доступ и скопируйте **API Read Access Token** (Bearer), не `api_key`.
-3. Остановите сервер. В `.env` установите `DATA_SOURCE=tmdb` и `TMDB_READ_TOKEN=<ваш токен>`.
-4. Запустите команду с `--env-file .env` выше. Нужны действующий токен и доступ к TMDB API/изображениям.
-5. Вернуться к demo: остановите сервер, установите `DATA_SOURCE=fixture` и снова запустите. Токен можно удалить.
+1. Create an account on [TMDB](https://www.themoviedb.org/).
+2. Request API access in [Settings → API](https://www.themoviedb.org/settings/api) and copy the **API Read Access Token** (Bearer), not the `API Key`.
+3. Stop the server. In `.env`, set `DATA_SOURCE=tmdb` and `TMDB_READ_TOKEN=<your full token>`, without the `Bearer` prefix.
+4. Start the server using the `--env-file .env` command above. A valid token and access to the TMDB API and image service are required.
+5. To return to demo mode, stop the server, set `DATA_SOURCE=fixture`, and start it again. You may remove the token.
 
-Альтернатива для текущего shell (macOS / Linux, без записи токена в историю):
+Alternatively, configure the current shell without saving the token in shell history (macOS / Linux):
 
 ```bash
 export DATA_SOURCE=tmdb
 read -r -s TMDB_READ_TOKEN
 export TMDB_READ_TOKEN
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-# После Ctrl+C:
+# After Ctrl+C:
 unset DATA_SOURCE TMDB_READ_TOKEN
 ```
 
-Backend вызывает только TMDB `GET /3/discover/movie` с `include_adult=false`, `language=en-US`, `sort_by=popularity.desc` и запрошенной страницей. Токен отправляется только в серверном Authorization header. HTTP timeout — 10 секунд на upstream-запрос; при восстановлении totals для отклонённой страницы возможен второй запрос. Без токена в TMDB-режиме `/api/movies` возвращает безопасный `502`, но `/api/health` продолжает отвечать `200`. Автоматического fallback на fixture нет.
+The backend calls TMDB `GET /3/discover/movie` with `include_adult=false`, `language=en-US`, `sort_by=popularity.desc`, and the requested page. The token is sent only in the server-side Authorization header. The HTTP timeout is 10 seconds per upstream request; recovering totals for a rejected page may require a second request. Without a token in TMDB mode, `/api/movies` returns a safe `502`, while `/api/health` continues to return `200`. There is no automatic fallback to fixture data.
 
-## Endpoints и ручные примеры
+## Endpoints and manual examples
 
-Главный документ для QA: **[docs/API_CONTRACT.md](docs/API_CONTRACT.md)**.
+The primary reference for QA is **[docs/API_CONTRACT.md](docs/API_CONTRACT.md)**.
 
 ```bash
 curl -i http://localhost:8000/api/health             # 200, {"status":"ok"}
-curl -i http://localhost:8000/api/movies             # 200, 20 фильмов
-curl -i 'http://localhost:8000/api/movies?page=2'     # 200, 5 фильмов
-curl -i 'http://localhost:8000/api/movies?page=3'     # 200, results=[]
+curl -i http://localhost:8000/api/movies             # 200, 20 movies in fixture mode
+curl -i 'http://localhost:8000/api/movies?page=2'     # 200, 5 movies in fixture mode
+curl -i 'http://localhost:8000/api/movies?page=3'     # 200, results=[] in fixture mode
 curl -i 'http://localhost:8000/api/movies?page=0'     # 422
 curl -i 'http://localhost:8000/api/movies?page=501'   # 422
 curl -i 'http://localhost:8000/api/movies?page=abc'   # 422
@@ -88,15 +88,15 @@ curl -I http://localhost:8000/static/style.css       # 200
 curl -i http://localhost:8000/docs                   # 200, HTML
 ```
 
-В fixture ровно 25 вымышленных фильмов, фиксированный порядок и ID 1001–1025. Есть `0`, `7.9`, `8.0`, `8.1`, `10.0`, отсутствующие даты/постер и пустое описание. Локальные постеры не требуют сети. Абсолютные URL постеров используют origin текущего запроса; сравнивайте стабильность данных на одном base URL.
+Fixture mode contains exactly 25 fictional movies in a fixed order, with IDs 1001–1025. It includes ratings of `0`, `7.9`, `8.0`, `8.1`, and `10.0`, missing dates, a missing poster, and an empty description. Local posters require no network connection. Absolute poster URLs use the current request's origin; compare data stability using the same base URL.
 
-## Структура
+## Repository structure
 
 ```text
 app/
-  main.py                 # приложение, конфигурация, frontend
-  models.py               # схемы публичных ответов
-  routes/movies.py         # HTTP endpoint каталога
+  main.py                 # Application, configuration, frontend
+  models.py               # Public response schemas
+  routes/movies.py         # Movie catalog HTTP endpoint
   providers/
     fixture_provider.py
     tmdb_provider.py
@@ -106,43 +106,46 @@ app/
     style.css
     app.js
     tmdb-logo.svg
-    posters/              # 5 локальных SVG-иллюстраций
- data/movies.json
- docs/API_CONTRACT.md
- docs/ROADMAP.md
- docs/CHANGES.md
- docs/SMOKE_CHECK.md
- PRODUCT.md
- DESIGN.md
- .impeccable/design.json   # описание фактических UI-паттернов
- .env.example
- .gitignore
- pyproject.toml
- README.md
+    posters/              # Five local SVG illustrations
+data/movies.json
+docs/API_CONTRACT.md
+docs/ROADMAP.md
+docs/CHANGES.md
+docs/SMOKE_CHECK.md
+tests/
+  api/.gitkeep            # Placeholder for QA-authored API tests
+  ui/.gitkeep             # Placeholder for QA-authored UI tests
+PRODUCT.md
+DESIGN.md
+.impeccable/design.json   # Documentation of implemented UI patterns
+.env.example
+.gitignore
+pyproject.toml
+README.md
 ```
 
-Пустые `__init__.py` обозначают Python-пакеты. Установка — editable из клонированного репозитория; запуск wheel вне репозитория не является поддерживаемым сценарием MVP.
+Empty `__init__.py` files identify Python packages. Install the project in editable mode from the cloned repository; running a wheel outside the repository is not a supported MVP use case.
 
-## Совместная работа
+## Collaboration
 
-QA использует только публичный контракт, HTTP и UI. Создайте собственный `tests/`, зависимости QA и тесты по своему усмотрению. Для детерминированных проверок используйте fixture, для внешнего smoke — TMDB. Issue: окружение, шаги, ожидаемый/фактический результат, HTTP-ответ. Developer делает небольшой PR с критериями приёмки; QA добавляет регрессию самостоятельно.
+QA uses the public contract, HTTP API, and UI. The `tests/api/` and `tests/ui/` directories are placeholders; QA adds their own dependencies and tests. Use fixture mode for deterministic checks and TMDB for external integration smoke checks. Bug reports should include the environment, reproduction steps, expected and actual results, and the HTTP response. The developer submits small PRs with acceptance criteria; QA independently adds regression coverage.
 
-Поиск, фильтрация по рейтингу, сортировка, детали и избранное **не реализованы**. Каждый будущий этап — отдельный PR с обновлением API_CONTRACT и CHANGES; см. [ROADMAP](docs/ROADMAP.md).
+Search, rating filters, sorting, movie details, and favorites are **not implemented**. Each future iteration requires a separate PR and updates to API_CONTRACT and CHANGES; see the [ROADMAP](docs/ROADMAP.md).
 
 ## Credits / About
 
-Demo-фильмы и SVG-постеры вымышлены и созданы для проекта; это не данные TMDB.
+Demo movies and SVG posters are fictional and created for this project; they are not TMDB data.
 
-В TMDB-режиме источник данных и постеров — [The Movie Database (TMDB)](https://www.themoviedb.org/).
+In TMDB mode, movie data and posters come from [The Movie Database (TMDB)](https://www.themoviedb.org/).
 
 **This product uses the TMDB API but is not endorsed or certified by TMDB.**
 
-Официальный неизменённый логотип сохранён локально в `app/static/tmdb-logo.svg`, источник: https://files.readme.io/29c6fee-blue_short.svg (логотип официальной документации TMDB). Он показан в Credits менее заметно, чем название приложения; исходные пропорции и цвета сохранены.
+The official, unmodified logo is bundled locally as `app/static/tmdb-logo.svg`. Source: https://files.readme.io/29c6fee-blue_short.svg (the logo used in the official TMDB documentation). It appears in Credits less prominently than the application name, with its original proportions and colors preserved.
 
-Официальные материалы:
+Official resources:
 - [Discover movie](https://developer.themoviedb.org/reference/discover-movie)
 - [Application authentication](https://developer.themoviedb.org/docs/authentication-application)
 - [FAQ: attribution requirements](https://developer.themoviedb.org/docs/faq)
 - [Approved logos and attribution](https://www.themoviedb.org/about/logos-attribution)
 
-Для использования TMDB вне этого учебного сценария проверьте актуальные условия TMDB и требования к лицензированию.
+Before using TMDB beyond this learning project, review its current terms and licensing requirements.
