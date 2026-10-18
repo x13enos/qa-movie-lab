@@ -1,12 +1,12 @@
-# Movie QA Lab — публичный API-контракт
+# Movie QA Lab — public API contract
 
-Версия **1.0 / Iteration 1 (MVP)**. Основной документ для самостоятельного black-box QA. Base URL: `http://localhost:8000`. Все ответы `/api/*`, включая ошибки, имеют `Content-Type: application/json`. Успешные ответы содержат только описанные поля. `GET /`, `/docs` возвращают HTML.
+Version **1.0 / Iteration 1 (MVP)**. The primary reference for independent black-box QA. Base URL: `http://localhost:8000`. All `/api/*` responses, including errors, have `Content-Type: application/json`. Successful responses contain only the documented fields. `GET /` and `/docs` return HTML.
 
 ## GET /api/health
 
-Независим от источника данных, токена и доступности TMDB.
+Independent of the data source, token, and TMDB availability.
 
-**200 OK**, точный ответ:
+**200 OK**, exact response:
 
 ```json
 {"status":"ok"}
@@ -14,15 +14,15 @@
 
 ## GET /api/movies
 
-| Query | Тип | Default | Ограничения |
+| Query | Type | Default | Constraints |
 | --- | --- | --- | --- |
-| `page` | целое число | `1` | от `1` до `500` включительно |
+| `page` | integer | `1` | from `1` to `500`, inclusive |
 
-Числа в дробной записи (в том числе `1.0`) не принимаются. Фильтров, поиска и сортировки в этой версии нет. Неизвестные query-параметры игнорируются и не изменяют список; это не означает поддержку будущих функций. Для `page` передавайте одно значение.
+Numbers in decimal notation (including `1.0`) are not accepted. Filters, search, and sorting are not available in this version. Unknown query parameters are ignored and do not change the list; this does not imply support for future features. Pass a single value for `page`.
 
 ### 200 OK
 
-Пример для fixture, сокращённый: полный ответ страницы 1 содержит 20 объектов.
+Abbreviated fixture example: the full page 1 response contains 20 objects.
 
 ```json
 {
@@ -44,80 +44,80 @@
 }
 ```
 
-| Поле | Контракт |
+| Field | Contract |
 | --- | --- |
-| `page` | целое, запрошенная страница |
-| `page_size` | целое, всегда `20` |
-| `total_results` | неотрицательное целое, количество всего набора |
-| `total_pages` | целое, `ceil(total_results / 20)`; при 0 результатах — `0` |
-| `results` | массив от 0 до 20 объектов |
-| `results[].id` | целое число |
-| `results[].title` | непустая строка |
-| `results[].overview` | строка, допускается `""` |
-| `results[].release_date` | корректная дата `YYYY-MM-DD` или `null` при отсутствии/некорректной дате |
-| `results[].rating` | JSON-число, `0 ≤ rating ≤ 10` |
-| `results[].vote_count` | неотрицательное целое число |
-| `results[].poster_url` | полный HTTP(S) URL изображения или `null` |
+| `page` | integer, requested page |
+| `page_size` | integer, always `20` |
+| `total_results` | nonnegative integer, size of the entire dataset |
+| `total_pages` | integer, `ceil(total_results / 20)`; `0` when there are no results |
+| `results` | array of 0 to 20 objects |
+| `results[].id` | integer |
+| `results[].title` | nonempty string |
+| `results[].overview` | string, may be `""` |
+| `results[].release_date` | valid `YYYY-MM-DD` date, or `null` for a missing/invalid date |
+| `results[].rating` | JSON number, `0 ≤ rating ≤ 10` |
+| `results[].vote_count` | nonnegative integer |
+| `results[].poster_url` | absolute HTTP(S) image URL or `null` |
 
-Fixture — 25 вымышленных фильмов, уникальные ID, неизменный порядок между запусками. Стабильность сравнивается на одинаковом base URL: абсолютные локальные poster URL используют origin запроса.
+The fixture contains 25 fictional movies with unique IDs and a fixed order across restarts. Compare stability using the same base URL: absolute local poster URLs use the request origin.
 
-| Запрос fixture | HTTP | Число results | total_results | total_pages |
+| Fixture request | HTTP | Number of results | total_results | total_pages |
 | --- | --- | --- | --- | --- |
-| без page / `page=1` | 200 | 20 | 25 | 2 |
+| no page / `page=1` | 200 | 20 | 25 | 2 |
 | `page=2` | 200 | 5 | 25 | 2 |
 | `page=3` | 200 | 0 | 25 | 2 |
 | `page=500` | 200 | 0 | 25 | 2 |
 
-Точный ответ для `page=3`:
+Exact response for `page=3`:
 
 ```json
 {"page":3,"page_size":20,"total_results":25,"total_pages":2,"results":[]}
 ```
 
-В TMDB-режиме структура и валидация такие же. Фильмы и totals изменяются во внешнем сервисе. Выборка: не adult, язык en-US, порядок popularity.desc. Страница за пределами набора по возможности возвращает 200 с пустым results и корректными totals. Если upstream отклоняет страницу и totals невозможно получить, возвращается безопасная upstream-ошибка, не 500. TMDB API может ограничивать выдачу 500 страницами даже при большем total_pages; public page остаётся ограничен 500.
+TMDB mode uses the same structure and validation. Movies and totals change in the external service. Selection: non-adult, language en-US, popularity.desc order. A page beyond the dataset returns 200 with empty results and correct totals where possible. If the upstream service rejects the page and totals cannot be retrieved, a safe upstream error is returned, not 500. The TMDB API may limit access to 500 pages even when total_pages is larger; the public page parameter remains limited to 500.
 
 ### 422 Unprocessable Entity
 
-Примеры: `page=0`, `page=-1`, `page=501`, `page=abc`, `page=1.5`, `page=1.0`, пустое `page=`. JSON со стандартным массивом `detail`; текст и дополнительные поля ошибок не являются стабильным контрактом.
+Examples: `page=0`, `page=-1`, `page=501`, `page=abc`, `page=1.5`, `page=1.0`, empty `page=`. JSON with a standard `detail` array; error text and additional fields are not part of the stable contract.
 
-Пример формы (сокращённый):
+Example structure (abbreviated):
 
 ```json
 {"detail":[{"loc":["query","page"],"msg":"Input should be greater than or equal to 1","type":"greater_than_equal"}]}
 ```
 
-### Ошибки данных TMDB
+### TMDB data errors
 
-| Условие | HTTP | Точное тело |
+| Condition | HTTP | Exact body |
 | --- | --- | --- |
-| Сетевая ошибка, некорректный ответ, upstream HTTP error | 502 | `{"detail":"Movie data is temporarily unavailable"}` |
+| Network error, invalid response, upstream HTTP error | 502 | `{"detail":"Movie data is temporarily unavailable"}` |
 | TMDB rate limit (429) | 503 | `{"detail":"Movie data is temporarily unavailable"}` |
 | Timeout | 504 | `{"detail":"Movie data request timed out"}` |
 
-Отсутствующий/недействующий токен в режиме TMDB приводит к 502 для каталога. Токен, traceback и секреты никогда не попадают в клиентские ответы. Нет случайных ошибок, специальных fault injection endpoints или fallback на demo.
+A missing/invalid token in TMDB mode results in 502 for the catalog. Tokens, tracebacks, and secrets never appear in client responses. There are no random errors, special fault injection endpoints, or fallback to demo data.
 
-## UI и документация
+## UI and documentation
 
-- `GET /` → **200 HTML**, «Movie QA Lab», источник `Demo data` или `TMDB`.
-- Карточки: название, год при наличии даты, рейтинг, краткое описание, постер или заглушка. Пустое описание не ломает UI.
-- `Previous` / `Next`, номер страницы. Previous отключён на первой странице, Next — на последней, при пустом наборе и на странице 500. Обе кнопки отключены во время загрузки.
-- Состояния: `Loading`, `No movies found`, `Failed to load movies`, успешная сетка. Ошибка содержит совет повторной загрузки страницы.
-- UI получает фильмы только через `/api/movies`. Credits указывают фиктивность demo и источник TMDB без ложной атрибуции.
-- `GET /docs` → **200 HTML**, стандартный Swagger UI.
-- `GET /openapi.json` → **200 JSON**, машиночитаемый контракт. Swagger использует стандартные CDN-ресурсы.
-- `/static/*` — локальные CSS, JS и SVG frontend-ресурсы, не API.
+- `GET /` → **200 HTML**, “Movie QA Lab”, source `Demo data` or `TMDB`.
+- Cards: title, year when a date is available, rating, short description, poster or placeholder. An empty description does not break the UI.
+- `Previous` / `Next`, page number. Previous is disabled on the first page; Next is disabled on the last page, for an empty dataset, and on page 500. Both buttons are disabled while loading.
+- States: `Loading`, `No movies found`, `Failed to load movies`, successful grid. The error includes advice to reload the page.
+- The UI retrieves movies only through `/api/movies`. Credits identify the fictional demo data and TMDB as a source without false attribution.
+- `GET /docs` → **200 HTML**, standard Swagger UI.
+- `GET /openapi.json` → **200 JSON**, machine-readable contract. Swagger uses standard CDN assets.
+- `/static/*` — local CSS, JS, and SVG frontend assets, not API endpoints.
 
-## Acceptance criteria Iteration 1
+## Iteration 1 acceptance criteria
 
-1. После установки и описанного запуска fixture работает без токена и внешней сети.
-2. Health: точные 200 и `{"status":"ok"}`, независимо от TMDB.
-3. Movies: 200, описанные типы/поля; fixture стабилен при повторных запросах и перезапусках.
-4. Fixture pages 1/2/3: соответственно 20/5/0 объектов, totals 25 и 2.
-5. Недопустимый page: 422 JSON, не 500.
-6. UI адаптивен, показывает карточки/навигацию, корректно обрабатывает отсутствие постера/описания, loading/empty/error.
-7. TMDB с действующими credentials получает реальные фильмы backend-only и нормализует их в тот же контракт; ошибки соответствуют таблице.
-8. README содержит установку, запуск, остановку, variables, переключение режима и curl.
-9. Этот документ доступен QA без необходимости изучать реализацию.
-10. Готовые QA-автотесты не поставляются: QA создаёт их самостоятельно.
+1. After installation and startup as documented, fixture mode works without a token or external network access.
+2. Health: exact 200 and `{"status":"ok"}`, independent of TMDB.
+3. Movies: 200, documented types/fields; the fixture is stable across repeated requests and restarts.
+4. Fixture pages 1/2/3: 20/5/0 objects respectively, totals 25 and 2.
+5. Invalid page: 422 JSON, not 500.
+6. The UI is responsive, displays cards/navigation, and correctly handles missing posters/descriptions and loading/empty/error states.
+7. TMDB with valid credentials retrieves real movies through the backend only and normalizes them to the same contract; errors match the table.
+8. README includes installation, startup, shutdown, variables, mode switching, and curl examples.
+9. This document is available to QA without requiring implementation knowledge.
+10. Ready-made QA automated tests are not supplied: QA creates them independently.
 
-Будущие фильтры и другие функции не входят в этот контракт. Изменения требуют отдельного PR и новой версии этого документа.
+Future filters and other features are outside this contract. Changes require a separate PR and a new version of this document.
