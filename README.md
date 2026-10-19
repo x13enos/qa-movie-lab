@@ -1,6 +1,6 @@
-# Movie QA Lab — Iteration 1
+# Movie QA Lab — Rating filter and movie details
 
-A learning catalog for black-box QA over HTTP. FastAPI serves the API and a minimal HTML/CSS/JavaScript frontend from the same origin. **Only the MVP is implemented**: a movie list and pagination. QA writes their own tests using `pytest` and `requests`; no ready-made QA tests or exercise solutions are included.
+A learning catalog for black-box QA over HTTP. FastAPI serves the API and a minimal HTML/CSS/JavaScript frontend from the same origin. Implemented: a paginated movie catalog, an inclusive minimum-rating filter, and movie details with direct UI links. QA writes their own tests using `pytest` and `requests`; no ready-made QA tests or exercise solutions are included.
 
 ## Installation and startup
 
@@ -69,7 +69,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 unset DATA_SOURCE TMDB_READ_TOKEN
 ```
 
-The backend calls TMDB `GET /3/discover/movie` with `include_adult=false`, `language=en-US`, `sort_by=popularity.desc`, and the requested page. The token is sent only in the server-side Authorization header. The HTTP timeout is 10 seconds per upstream request; recovering totals for a rejected page may require a second request. Without a token in TMDB mode, `/api/movies` returns a safe `502`, while `/api/health` continues to return `200`. There is no automatic fallback to fixture data.
+The backend calls TMDB `GET /3/discover/movie` with `include_adult=false`, `language=en-US`, `sort_by=popularity.desc`, and the requested page. An optional `min_rating` is forwarded as `vote_average.gte` before pagination. Details use `GET /3/movie/{movie_id}` with `language=en-US`. The token is sent only in the server-side Authorization header. The HTTP timeout is 10 seconds per upstream request; recovering totals for a rejected page may require a second request. Without a token in TMDB mode, `/api/movies` returns a safe `502`, while `/api/health` continues to return `200`. There is no automatic fallback to fixture data.
 
 ## Endpoints and manual examples
 
@@ -78,6 +78,11 @@ The primary reference for QA is **[docs/API_CONTRACT.md](docs/API_CONTRACT.md)**
 ```bash
 curl -i http://localhost:8000/api/health             # 200, {"status":"ok"}
 curl -i http://localhost:8000/api/movies             # 200, 20 movies in fixture mode
+curl -i 'http://localhost:8000/api/movies?min_rating=8' # 200, 11 fixture movies
+curl -i 'http://localhost:8000/api/movies?min_rating=11' # 422
+curl -i http://localhost:8000/api/movies/1001        # 200, single movie object
+curl -i http://localhost:8000/api/movies/999999      # 404
+curl -i http://localhost:8000/api/movies/abc         # 422
 curl -i 'http://localhost:8000/api/movies?page=2'     # 200, 5 movies in fixture mode
 curl -i 'http://localhost:8000/api/movies?page=3'     # 200, results=[] in fixture mode
 curl -i 'http://localhost:8000/api/movies?page=0'     # 422
@@ -90,19 +95,24 @@ curl -i http://localhost:8000/docs                   # 200, HTML
 
 Fixture mode contains exactly 25 fictional movies in a fixed order, with IDs 1001–1025. It includes ratings of `0`, `7.9`, `8.0`, `8.1`, and `10.0`, missing dates, a missing poster, and an empty description. Local posters require no network connection. Absolute poster URLs use the current request's origin; compare data stability using the same base URL.
 
+### Using the new UI
+
+Set **Minimum rating** (0–10) and choose **Apply filter**. Leave it blank or choose **Reset** for all ratings. Applying or resetting starts at page 1; pagination retains the filter. Click a movie title to open its full description, ID, release date, rating and vote count. **Back to catalog** restores the applied filter and page. Catalog URLs and `/movies/1001` can be shared or opened directly.
+
 ## Repository structure
 
 ```text
 app/
   main.py                 # Application, configuration, frontend
   models.py               # Public response schemas
-  routes/movies.py         # Movie catalog HTTP endpoint
+  routes/movies.py         # Catalog and movie details HTTP endpoints
   providers/
     fixture_provider.py
     tmdb_provider.py
   services/movie_service.py
   static/
     index.html
+    movie.html            # Direct movie details page
     style.css
     app.js
     tmdb-logo.svg
@@ -113,7 +123,7 @@ docs/ROADMAP.md
 docs/CHANGES.md
 docs/SMOKE_CHECK.md
 tests/
-  api/.gitkeep            # Placeholder for QA-authored API tests
+  api/                    # QA-authored API tests
   ui/.gitkeep             # Placeholder for QA-authored UI tests
 PRODUCT.md
 DESIGN.md
@@ -130,7 +140,7 @@ Empty `__init__.py` files identify Python packages. Install the project in edita
 
 QA uses the public contract, HTTP API, and UI. The `tests/api/` and `tests/ui/` directories are placeholders; QA adds their own dependencies and tests. Use fixture mode for deterministic checks and TMDB for external integration smoke checks. Bug reports should include the environment, reproduction steps, expected and actual results, and the HTTP response. The developer submits small PRs with acceptance criteria; QA independently adds regression coverage.
 
-Search, rating filters, sorting, movie details, and favorites are **not implemented**. Each future iteration requires a separate PR and updates to API_CONTRACT and CHANGES; see the [ROADMAP](docs/ROADMAP.md).
+Search, sorting, favorites, and authorization are **not implemented**. Each future iteration requires a separate PR and updates to API_CONTRACT and CHANGES; see the [ROADMAP](docs/ROADMAP.md).
 
 ## Credits / About
 

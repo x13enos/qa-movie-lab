@@ -23,6 +23,15 @@
   <main>
     <div class="catalog-heading"><h2>Movie catalog</h2><p id="summary">Browse one page at a time.</p></div>
     <p class="demo-note" data-fixture-only>Fictional films. Fixed data for QA practice.</p>
+    <form id="rating-filter" class="rating-filter">
+      <div class="filter-field">
+        <label for="min-rating">Minimum rating</label>
+        <input id="min-rating" name="min_rating" type="number" min="0" max="10" step="any" placeholder="Any rating" aria-describedby="rating-help">
+        <span id="rating-help">0–10, inclusive</span>
+      </div>
+      <button id="apply-filter" type="submit">Apply filter</button>
+      <button id="reset-filter" type="button">Reset</button>
+    </form>
     <div id="status" class="status" role="status" aria-live="polite">Loading</div>
     <section id="movies" class="movie-grid" aria-label="Movies" aria-busy="true"></section>
     <nav class="pagination" aria-label="Movie pages">

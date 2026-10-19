@@ -10,11 +10,13 @@ PAGE_SIZE = 20
 def integer_query(value: object) -> object:
     # FastAPI/Pydantic otherwise accept strings such as "1.0" as integers.
     if isinstance(value, str) and not re.fullmatch(r"[+-]?[0-9]+", value):
-        raise ValueError("page must be an integer")
+        raise ValueError("value must be an integer")
     return value
 
 
-PageNumber = Annotated[int, BeforeValidator(integer_query), Field(ge=1, le=500)]
+PageNumber = Annotated[int, Field(ge=1, le=500), BeforeValidator(integer_query)]
+MovieId = Annotated[int, Field(ge=1), BeforeValidator(integer_query)]
+MinRating = Annotated[float, Field(ge=0, le=10, allow_inf_nan=False)]
 
 
 class Movie(BaseModel):

@@ -61,7 +61,9 @@ Poster ratio 2:3 with gently rounded corners. Small-radius rectangular buttons a
 
 ## Components
 
-- **Movie card:** poster, title, year, rating, three-line description. Missing posters and descriptions have clear text fallbacks. Image failures also show the poster placeholder.
+- **Movie card:** poster, linked title, year, rating, three-line description. Titles use the established blue underlined link treatment to open details. Missing posters and descriptions have clear text fallbacks. Image failures also show the poster placeholder.
+- **Rating field:** native number input, visible label and range hint, white fill, thin neutral border and existing control radius. Apply and Reset reuse the outlined button. Filter controls wrap on narrow screens.
+- **Movie details:** back link, movie heading, poster beside a definition list and complete description. Below 680px, poster and content stack. Missing values use explicit text; loading, not-found and error states remain plain live text.
 - **Pagination:** native buttons, 44px minimum height, outlined blue default, tonal hover/active, muted disabled. A 3px blue outline with 4px offset marks keyboard focus.
 - **Mode label:** compact noninteractive badge; source is not a filter.
 - **Status:** plain live text for loading/empty, red text and recovery advice for errors.

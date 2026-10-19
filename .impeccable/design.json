@@ -21,6 +21,13 @@
       "css":".ds-page{font:600 14px system-ui;padding:10px 18px;min-height:44px;border:1px solid var(--accent,#2055ad);border-radius:4px;background:white;color:var(--accent,#2055ad);cursor:pointer}.ds-page:hover:not(:disabled){background:#edf3fc}.ds-page:active:not(:disabled){background:#dce8fa}.ds-page:focus-visible{outline:3px solid var(--accent,#2055ad);outline-offset:4px}.ds-page:disabled{border-color:#d9e0e8;color:#697583;background:#edf0f3;cursor:not-allowed}"
     },
     {
+      "name":"Minimum rating input",
+      "kind":"input",
+      "description":"Labelled native optional number field with a persistent range hint.",
+      "html":"<div class=\"ds-field\"><label for=\"ds-rating\">Minimum rating</label><input id=\"ds-rating\" type=\"number\" min=\"0\" max=\"10\" step=\"any\" placeholder=\"Any rating\" aria-describedby=\"ds-rating-help\"><span id=\"ds-rating-help\">0–10, inclusive</span></div>",
+      "css":".ds-field{display:flex;flex-direction:column;gap:4px;font-family:system-ui}.ds-field label{font-size:14px;font-weight:600}.ds-field span{font-size:13px;color:var(--muted,#586574)}.ds-field input{box-sizing:border-box;width:180px;min-height:44px;padding:8px 12px;font:inherit;color:var(--ink,#202a36);background:white;border:1px solid var(--line,#d9e0e8);border-radius:4px;caret-color:var(--accent,#2055ad)}.ds-field input::placeholder{color:var(--muted,#586574);opacity:1}.ds-field input:focus-visible{outline:3px solid var(--accent,#2055ad);outline-offset:4px}.ds-field input:disabled{background:#edf0f3}"
+    },
+    {
       "name":"Data source label",
       "kind":"chip",
       "description":"Noninteractive current source badge.",

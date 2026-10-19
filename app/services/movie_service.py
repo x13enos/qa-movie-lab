@@ -1,3 +1,7 @@
+class MovieNotFoundError(Exception):
+    pass
+
+
 class MovieDataError(Exception):
     def __init__(self, status_code: int = 502):
         self.status_code = status_code

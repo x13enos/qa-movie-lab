@@ -5,7 +5,7 @@ import httpx
 from pydantic import ValidationError
 
 from app.models import Movie, MoviePage, PAGE_SIZE
-from app.services.movie_service import MovieDataError
+from app.services.movie_service import MovieDataError, MovieNotFoundError
 
 
 class TMDBProvider:
@@ -13,23 +13,29 @@ class TMDBProvider:
         self.client = client
         self.token = token
 
-    async def request(self, page: int) -> httpx.Response:
+    async def request(self, path: str, params: dict) -> httpx.Response:
         if not self.token:
             raise MovieDataError()
         try:
             return await self.client.get(
-                "https://api.themoviedb.org/3/discover/movie",
+                f"https://api.themoviedb.org/3/{path}",
                 headers={"Authorization": f"Bearer {self.token}"},
-                params={"include_adult": "false", "language": "en-US",
-                        "sort_by": "popularity.desc", "page": page},
+                params=params,
             )
         except httpx.TimeoutException:
             raise MovieDataError(504) from None
         except httpx.RequestError:
             raise MovieDataError() from None
 
+    async def discover(self, page: int, min_rating: float | None) -> httpx.Response:
+        params = {"include_adult": "false", "language": "en-US",
+                  "sort_by": "popularity.desc", "page": page}
+        if min_rating is not None:
+            params["vote_average.gte"] = min_rating
+        return await self.request("discover/movie", params)
+
     @staticmethod
-    def decode(response: httpx.Response) -> dict:
+    def decode_object(response: httpx.Response) -> dict:
         if response.status_code == 429:
             raise MovieDataError(503)
         if response.status_code != 200:
@@ -38,6 +44,14 @@ class TMDBProvider:
             data = response.json()
             if not isinstance(data, dict):
                 raise ValueError()
+            return data
+        except (ValueError, KeyError, TypeError):
+            raise MovieDataError() from None
+
+    @classmethod
+    def decode(cls, response: httpx.Response) -> dict:
+        data = cls.decode_object(response)
+        try:
             total = data["total_results"]
             results = data["results"]
             if type(total) is not int or total < 0:
@@ -74,12 +88,26 @@ class TMDBProvider:
             vote_count=record["vote_count"], poster_url=poster_url,
         )
 
-    async def movies(self, page: int, base_url: str) -> MoviePage:
-        response = await self.request(page)
+    async def movie(self, movie_id: int, base_url: str) -> Movie:
+        response = await self.request(f"movie/{movie_id}", {"language": "en-US"})
+        if response.status_code == 404:
+            raise MovieNotFoundError()
+        data = self.decode_object(response)
+        try:
+            movie = self.normalize(data)
+            if movie.id != movie_id:
+                raise ValueError()
+            return movie
+        except (ValidationError, ValueError, KeyError, TypeError, AttributeError):
+            raise MovieDataError() from None
+
+    async def movies(self, page: int, base_url: str,
+                     min_rating: float | None = None) -> MoviePage:
+        response = await self.discover(page, min_rating)
         # Some upstreams reject an out-of-range page. Recover totals from page 1,
         # but do not mask other 4xx errors or introduce extra calls on success.
         if page > 1 and response.status_code in (400, 422):
-            first = self.decode(await self.request(1))
+            first = self.decode(await self.discover(1, min_rating))
             total = first["total_results"]
             total_pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
             if page > total_pages:

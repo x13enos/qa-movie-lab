@@ -11,7 +11,7 @@ from app.models import Health
 from app.providers.fixture_provider import FixtureProvider
 from app.providers.tmdb_provider import TMDBProvider
 from app.routes.movies import router
-from app.services.movie_service import MovieDataError
+from app.services.movie_service import MovieDataError, MovieNotFoundError
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "app" / "static"
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
             yield
 
 
-app = FastAPI(title="Movie QA Lab", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Movie QA Lab", version="0.2.0", lifespan=lifespan)
 app.include_router(router)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
@@ -44,15 +44,22 @@ async def movie_data_error(request: Request, exc: MovieDataError):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
+@app.exception_handler(MovieNotFoundError)
+async def movie_not_found(request: Request, exc: MovieNotFoundError):
+    return JSONResponse(status_code=404, content={"detail": "Movie not found"})
+
+
 @app.get("/api/health", response_model=Health, tags=["Health"])
 async def health():
     return Health()
 
 
+@app.get("/movies/{movie_id}", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def index(request: Request):
     source = request.app.state.data_source
-    html = (STATIC / "index.html").read_text(encoding="utf-8")
+    template = "movie.html" if "movie_id" in request.path_params else "index.html"
+    html = (STATIC / template).read_text(encoding="utf-8")
     return HTMLResponse(html.replace("{{DATA_SOURCE}}", source).replace(
         "{{MODE_LABEL}}", "Demo data" if source == "fixture" else "TMDB"
     ))

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-source="{{DATA_SOURCE}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Movie details · Movie QA Lab</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <!-- THESIS: Inspect one movie without losing the catalog context.
+       OWN-WORLD: Existing light slate catalog, blue links, local poster art and system typography.
+       STORY: Return to the filtered page, inspect the full description and movie metadata.
+       FIRST VIEWPORT: Shared header, back link, poster beside title and facts; stacked on mobile.
+       FORM: Narrow extension of the existing catalog; no new visual identity or motion.
+       FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
+  <header class="site-header">
+    <div class="header-content">
+      <div class="identity"><h1>Movie QA Lab</h1><span class="mode">{{MODE_LABEL}}</span></div>
+      <a href="/docs">API docs</a>
+    </div>
+  </header>
+  <main>
+    <a id="back-to-catalog" class="back-link" href="/">Back to catalog</a>
+    <h2 id="detail-heading">Movie details</h2>
+    <p class="demo-note" data-fixture-only>Fictional film. Fixed data for QA practice.</p>
+    <div id="status" class="status" role="status" aria-live="polite">Loading movie…</div>
+    <section id="movie-detail" class="movie-detail" aria-labelledby="detail-heading" aria-busy="true"></section>
+  </main>
+  <footer>
+    <h2>Credits / About</h2>
+    <p data-fixture-only>Demo data and poster illustrations are fictional and bundled locally. They are not provided by TMDB.</p>
+    <p data-tmdb-only>Movie data and posters provided by <a href="https://www.themoviedb.org/">The Movie Database (TMDB)</a>.</p>
+    <div class="tmdb-credit">
+      <a href="https://www.themoviedb.org/" aria-label="The Movie Database"><img src="/static/tmdb-logo.svg" alt="TMDB" width="110" height="15"></a>
+      <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    </div>
+  </footer>
+</body>
+</html>
