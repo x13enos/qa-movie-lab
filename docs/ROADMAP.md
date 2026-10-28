@@ -1,10 +1,9 @@
 # Roadmap
 
-Implemented in 0.2.0: minimum-rating filter (original Iteration 2) and movie details (original Iteration 5), including UI. Remaining items below are not implemented.
+Implemented through 0.3.0: minimum-rating filter (original Iteration 2), title search (Iteration 3) and movie details (original Iteration 5), including UI. Remaining items below are not implemented.
 
 Each iteration requires a separate PR, a new version of `API_CONTRACT.md`, an entry in `CHANGES.md`, and independent black-box tests written by QA. Incomplete features must not appear as working UI controls.
 
-- **Iteration 3 — Search:** search by title; agree on the contract separately, using TMDB `/search/movie`.
 - **Iteration 4 — Sorting:** sort by rating and date; agree on the contract.
 - **Iteration 6 — Favorites:** local add/remove operations; a database requires a separate decision.
 - **Iteration 7 — Failure scenarios:** controlled external responses/errors for black-box testing.

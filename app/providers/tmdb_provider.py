@@ -27,9 +27,13 @@ class TMDBProvider:
         except httpx.RequestError:
             raise MovieDataError() from None
 
-    async def discover(self, page: int, min_rating: float | None) -> httpx.Response:
-        params = {"include_adult": "false", "language": "en-US",
-                  "sort_by": "popularity.desc", "page": page}
+    async def discover(self, page: int, min_rating: float | None,
+                       query: str | None = None) -> httpx.Response:
+        params = {"include_adult": "false", "language": "en-US", "page": page}
+        if query is not None:
+            params["query"] = query
+            return await self.request("search/movie", params)
+        params["sort_by"] = "popularity.desc"
         if min_rating is not None:
             params["vote_average.gte"] = min_rating
         return await self.request("discover/movie", params)
@@ -102,12 +106,13 @@ class TMDBProvider:
             raise MovieDataError() from None
 
     async def movies(self, page: int, base_url: str,
-                     min_rating: float | None = None) -> MoviePage:
-        response = await self.discover(page, min_rating)
+                     min_rating: float | None = None,
+                     query: str | None = None) -> MoviePage:
+        response = await self.discover(page, min_rating, query)
         # Some upstreams reject an out-of-range page. Recover totals from page 1,
         # but do not mask other 4xx errors or introduce extra calls on success.
         if page > 1 and response.status_code in (400, 422):
-            first = self.decode(await self.discover(1, min_rating))
+            first = self.decode(await self.discover(1, min_rating, query))
             total = first["total_results"]
             total_pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
             if page > total_pages:

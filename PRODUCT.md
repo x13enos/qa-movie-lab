@@ -12,7 +12,7 @@ Python 3.12+, FastAPI, Uvicorn, httpx; HTML, CSS, vanilla JavaScript. Stack pres
 Developer and QA Engineer practising black-box HTTP testing. QA writes their own Python automation against the public contract, not the implementation.
 
 ## Capabilities and constraints
-Movie grid, pagination, inclusive minimum-rating filter, and direct movie details pages. Deterministic 25-film fixture by default, optional backend-only TMDB integration. One origin, no database, authentication, build tool or prepared QA tests. Offline runtime in fixture mode, including local artwork.
+Movie grid, pagination, title search or inclusive minimum-rating filter (mutually exclusive), and direct movie details pages. Deterministic 25-film fixture by default, optional backend-only TMDB integration. One origin, no database, authentication, build tool or prepared QA tests. Offline runtime in fixture mode, including local artwork.
 
 ## Brand commitments
 Movie QA Lab. User selected a minimal light neutral catalog. UI labels in English as specified. No future-feature controls.

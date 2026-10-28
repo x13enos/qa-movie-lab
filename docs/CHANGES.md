@@ -1,5 +1,12 @@
 # Changes
 
+## 0.3.0 — Title search / API contract 1.2
+
+- Optional trimmed `query`: case-insensitive literal title substring in fixture mode, TMDB `/search/movie` in external mode. Search before pagination; preserve correct totals and query during totals recovery.
+- Nonblank search and `min_rating` are mutually exclusive (422); blank search preserves existing behavior.
+- UI search field, Apply/Reset, explained disabled rating input, URL/pagination/details/back preservation, loading/empty/error recovery.
+- Developer regression tests cover fixture search, compatibility and mocked TMDB forwarding/recovery/errors; independent QA tests remain unchanged.
+
 ## 0.2.0 — Rating filter and movie details / API contract 1.1
 
 - Optional inclusive `min_rating` (finite 0–10): filter before pagination, recalculate totals, forward `vote_average.gte` to TMDB including totals recovery.
@@ -18,4 +25,4 @@
 - README, public API_CONTRACT, and a separate backlog.
 - No ready-made QA tests were created. Manual checks are recorded separately in SMOKE_CHECK.
 
-Search, sorting, favorites, controlled failure scenarios and UI automation exercises remain in the backlog.
+Sorting, favorites, controlled failure scenarios and UI automation exercises remain in the backlog.

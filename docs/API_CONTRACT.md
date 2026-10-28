@@ -1,6 +1,6 @@
 # Movie QA Lab — public API contract
 
-Version **1.1 / Rating filter and movie details**. The primary reference for independent black-box QA. Base URL: `http://localhost:8000`. All `/api/*` responses, including errors, have `Content-Type: application/json`. Successful responses contain only the documented fields. `GET /` and `/docs` return HTML.
+Version **1.2 / Title search**. The primary reference for independent black-box QA. Base URL: `http://localhost:8000`. All `/api/*` responses, including errors, have `Content-Type: application/json`. Successful responses contain only the documented fields. `GET /` and `/docs` return HTML.
 
 ## GET /api/health
 
@@ -24,7 +24,13 @@ Optional query **`min_rating`**: a finite number from **0 to 10 inclusive**, omi
 
 Filter the **entire dataset before pagination**, keeping its original order; include `rating >= min_rating` and recalculate both totals. At 8, exclude 7.9 and include 8.0/8.1. TMDB receives `vote_average.gte`, including when recovering totals; the backend does not filter only the loaded page.
 
-Search and sorting are not available. Unknown query parameters are ignored; this does not imply support for future features. Pass one value per supported parameter.
+Optional query **`query`**: title search. Leading and trailing whitespace is removed; an empty or whitespace-only value means no search. A nonempty `query` cannot be combined with `min_rating` (including `min_rating=0`): return **422** JSON with a standard `detail` array. Empty `query` can be combined with a rating filter.
+
+In fixture mode, match a case-insensitive literal substring of the title (Unicode casefold), preserve original order, search the entire dataset before pagination and recalculate totals. For example, `query=coast` returns only movie 1025; `query=  COAST  ` gives the same result. No matches returns 200 with `results=[]`, `total_results=0`, `total_pages=0`. A page beyond the search results returns 200 with empty results and unchanged totals.
+
+In TMDB mode, use `/3/search/movie` with trimmed `query`, `include_adult=false`, `language=en-US` and the requested page. Matching and ordering are determined by TMDB (including original, translated and alternative titles), not guaranteed to be literal substring matches. Preserve the upstream totals; do not apply page-local rating filtering. Totals recovery preserves the search query. Upstream error mappings are unchanged.
+
+Sorting is not available. Unknown query parameters are ignored; this does not imply support for future features. Pass one value per supported parameter.
 
 ### 200 OK
 
@@ -122,8 +128,9 @@ TMDB mode calls `/3/movie/{movie_id}` with `language=en-US`, normalizes the resp
 
 - `GET /` → **200 HTML**, “Movie QA Lab”, source `Demo data` or `TMDB`.
 - Cards: linked title, year when a date is available, rating, short description, poster or placeholder. An empty description does not break the UI.
-- Minimum rating: labelled optional number input (0–10), Apply filter and Reset. Both actions start at page 1; pagination keeps the applied filter. Controls are disabled while loading. Blank input means no filter.
-- The catalog URL stores `page` and optional `min_rating`; loading/sharing it restores those parameters. Invalid URL parameters show a recoverable validation message.
+- Title search: labelled search input and Apply/Reset controls. A nonblank draft search disables the rating input with an explanation. Applying a search clears the rating; clearing the search enables rating again. Reset clears both fields. No live search requests while typing.
+- Minimum rating: labelled optional number input (0–10). Apply and Reset start at page 1; pagination keeps the applied search or filter. Controls are disabled while loading. Blank input means no filter.
+- The catalog URL stores `page` and optional `min_rating` or `query`; loading/sharing it restores those parameters. Invalid URL parameters (including incompatible search/rating) show a recoverable validation message.
 - Linked titles open `/movies/{movie_id}`: full description, ID, release date, rating, votes, poster, and missing-data fallbacks. Back to catalog preserves the page and applied filter, including after a details reload.
 - The detail HTML route returns a 200 shell; the API request determines loading/success/not-found/invalid-ID/error states. Errors offer reload/back recovery.
 - `Previous` / `Next`, page number. Previous is disabled on the first page; Next is disabled on the last page, for an empty dataset, and on page 500. Both buttons are disabled while loading.
@@ -156,4 +163,13 @@ TMDB mode calls `/3/movie/{movie_id}` with `language=en-US`, normalizes the resp
 6. UI filtering, reset, pagination, direct details, missing data and back navigation work on desktop and mobile.
 7. Swagger/OpenAPI describe both additions; QA tests remain independently authored.
 
-Search, sorting, favorites and authorization are outside this contract. Changes require a new version of this document.
+## Title search acceptance criteria
+
+1. Fixture title search is case-insensitive, literal and trimmed; absent/blank `query` preserves existing catalog and rating-filter behavior.
+2. Search happens before pagination with correct totals and stable order; no matches and pages beyond the search results return empty arrays with correct totals.
+3. Nonblank search plus any valid rating returns 422, including rating 0; the same compatibility rules apply to both providers.
+4. TMDB uses its search endpoint and retains the query during totals recovery, with existing safe upstream errors.
+5. UI Apply/Reset, rating disabled/help state, loading/empty/error states, shared URLs, pagination and details/back navigation preserve the selected search.
+6. Swagger documents `query`. Existing QA tests remain unchanged.
+
+Sorting, favorites and authorization are outside this contract. Changes require a new version of this document.

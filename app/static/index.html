@@ -24,13 +24,20 @@
     <div class="catalog-heading"><h2>Movie catalog</h2><p id="summary">Browse one page at a time.</p></div>
     <p class="demo-note" data-fixture-only>Fictional films. Fixed data for QA practice.</p>
     <form id="rating-filter" class="rating-filter">
+      <div class="filter-field search-field">
+        <label for="title-query">Search by title</label>
+        <input id="title-query" name="query" type="search" placeholder="Movie title" aria-describedby="search-help">
+        <span id="search-help">Search by title or filter by rating.</span>
+      </div>
       <div class="filter-field">
         <label for="min-rating">Minimum rating</label>
         <input id="min-rating" name="min_rating" type="number" min="0" max="10" step="any" placeholder="Any rating" aria-describedby="rating-help">
         <span id="rating-help">0–10, inclusive</span>
       </div>
-      <button id="apply-filter" type="submit">Apply filter</button>
-      <button id="reset-filter" type="button">Reset</button>
+      <div class="filter-actions">
+        <button id="apply-filter" type="submit">Apply</button>
+        <button id="reset-filter" type="button">Reset</button>
+      </div>
     </form>
     <div id="status" class="status" role="status" aria-live="polite">Loading</div>
     <section id="movies" class="movie-grid" aria-label="Movies" aria-busy="true"></section>

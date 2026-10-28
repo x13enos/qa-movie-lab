@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, Request
+from fastapi.exceptions import RequestValidationError
 
 from app.models import ErrorResponse, MinRating, Movie, MovieId, MoviePage, PageNumber
 
@@ -16,9 +17,19 @@ async def movies(
     request: Request,
     page: Annotated[PageNumber, Query()] = 1,
     min_rating: Annotated[MinRating | None, Query()] = None,
+    query: Annotated[str | None, Query(description="Title search; cannot be combined with min_rating.")] = None,
 ):
+    if query is not None:
+        query = query.strip() or None
+    if query is not None and min_rating is not None:
+        raise RequestValidationError([{
+            "type": "value_error",
+            "loc": ("query", "query"),
+            "msg": "Title search cannot be combined with min_rating",
+            "input": query,
+        }])
     return await request.app.state.movie_provider.movies(
-        page, str(request.base_url), min_rating
+        page, str(request.base_url), min_rating, query
     )
 
 

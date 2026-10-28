@@ -34,7 +34,7 @@ async function loadMovieDetail() {
   const detail = document.querySelector("#movie-detail");
   const back = document.querySelector("#back-to-catalog");
   const context = new URLSearchParams();
-  for (const name of ["page", "min_rating"]) {
+  for (const name of ["page", "min_rating", "query"]) {
     if (query.has(name)) context.set(name, query.get(name));
   }
   back.href = context.size ? `/?${context}` : "/";
@@ -89,17 +89,22 @@ function startCatalog() {
   const pageLabel = document.querySelector("#page-label");
   const form = document.querySelector("#rating-filter");
   const ratingInput = document.querySelector("#min-rating");
+  const searchInput = document.querySelector("#title-query");
+  const ratingHelp = document.querySelector("#rating-help");
   const apply = document.querySelector("#apply-filter");
   const reset = document.querySelector("#reset-filter");
   let currentPage = 1;
   let totalPages = 0;
   let loading = false;
   let minRating = query.get("min_rating");
+  let searchTerm = query.get("query")?.trim() || null;
   ratingInput.value = minRating ?? "";
+  searchInput.value = searchTerm ?? "";
 
   function catalogQuery(page) {
     const params = new URLSearchParams({ page });
     if (minRating !== null) params.set("min_rating", minRating);
+    if (searchTerm !== null) params.set("query", searchTerm);
     return params;
   }
 
@@ -120,7 +125,10 @@ function startCatalog() {
   function updateNavigation() {
     previous.disabled = loading || currentPage <= 1;
     next.disabled = loading || currentPage >= totalPages || currentPage >= 500;
-    ratingInput.disabled = loading;
+    const searching = searchInput.value.trim() !== "";
+    ratingInput.disabled = loading || searching;
+    searchInput.disabled = loading;
+    ratingHelp.textContent = searching ? "Unavailable during title search." : "0–10, inclusive";
     apply.disabled = loading;
     reset.disabled = loading;
   }
@@ -141,7 +149,7 @@ function startCatalog() {
       });
       if (response.status === 422) {
         status.className = "status error";
-        status.textContent = "Invalid page or rating. Choose a rating from 0 to 10 and apply the filter to start at page 1.";
+        status.textContent = "Invalid catalog parameters. Use title search or a rating from 0 to 10, not both. Apply to start at page 1, or Reset.";
         summary.textContent = "Check the catalog parameters.";
         totalPages = 0;
         return;
@@ -152,14 +160,15 @@ function startCatalog() {
       totalPages = data.total_pages;
       history.replaceState(null, "", `/?${catalogQuery(currentPage)}`);
       grid.replaceChildren(...data.results.map(movieCard));
-      status.textContent = data.results.length ? "" : "No movies found. Try a lower minimum rating or reset the filter.";
+      status.textContent = data.results.length ? "" : "No movies found. Try another title, lower the minimum rating, or Reset.";
       status.hidden = data.results.length > 0;
       pageLabel.textContent = totalPages ? `Page ${currentPage} of ${totalPages}` : `Page ${currentPage}`;
-      const filterLabel = minRating === null ? "" : ` · minimum rating ${minRating}`;
-      summary.textContent = `${data.total_results} movies · ${data.results.length} on this page${filterLabel}`;
+      const filterLabel = searchTerm !== null ? ` · title search: “${searchTerm}”`
+        : minRating === null ? "" : ` · minimum rating ${minRating}`;
+      summary.textContent = `${data.total_results} ${data.total_results === 1 ? "movie" : "movies"} · ${data.results.length} on this page${filterLabel}`;
     } catch {
       status.className = "status error";
-      status.textContent = "Failed to load movies. Check that the server is running, then reload the page or apply the filter to retry.";
+      status.textContent = "Failed to load movies. Check that the server is running, then reload the page or choose Apply to retry.";
       summary.textContent = "Movie data is unavailable.";
     } finally {
       loading = false;
@@ -168,15 +177,21 @@ function startCatalog() {
     }
   }
 
+  searchInput.addEventListener("input", updateNavigation);
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    minRating = ratingInput.value === "" ? null : ratingInput.value;
+    searchTerm = searchInput.value.trim() || null;
+    searchInput.value = searchTerm ?? "";
+    minRating = searchTerm !== null || ratingInput.value === "" ? null : ratingInput.value;
+    if (searchTerm !== null) ratingInput.value = "";
     currentPage = 1;
     totalPages = 0;
     loadMovies(1);
   });
   reset.addEventListener("click", () => {
     ratingInput.value = "";
+    searchInput.value = "";
+    searchTerm = null;
     minRating = null;
     currentPage = 1;
     totalPages = 0;

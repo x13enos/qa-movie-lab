@@ -26,9 +26,11 @@ class FixtureProvider:
         raise MovieNotFoundError()
 
     async def movies(self, page: int, base_url: str,
-                     min_rating: float | None = None) -> MoviePage:
+                     min_rating: float | None = None,
+                     query: str | None = None) -> MoviePage:
         records = [record for record in self.records
-                   if min_rating is None or record["rating"] >= min_rating]
+                   if (min_rating is None or record["rating"] >= min_rating)
+                   and (query is None or query.casefold() in record["title"].casefold())]
         start = (page - 1) * PAGE_SIZE
         movies = [self.normalize(record, base_url)
                   for record in records[start:start + PAGE_SIZE]]

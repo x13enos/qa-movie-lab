@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
             yield
 
 
-app = FastAPI(title="Movie QA Lab", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Movie QA Lab", version="0.3.0", lifespan=lifespan)
 app.include_router(router)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 

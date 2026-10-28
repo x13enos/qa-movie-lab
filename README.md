@@ -1,6 +1,6 @@
-# Movie QA Lab — Rating filter and movie details
+# Movie QA Lab — Title search, rating filter and movie details
 
-A learning catalog for black-box QA over HTTP. FastAPI serves the API and a minimal HTML/CSS/JavaScript frontend from the same origin. Implemented: a paginated movie catalog, an inclusive minimum-rating filter, and movie details with direct UI links. QA writes their own tests using `pytest` and `requests`; no ready-made QA tests or exercise solutions are included.
+A learning catalog for black-box QA over HTTP. FastAPI serves the API and a minimal HTML/CSS/JavaScript frontend from the same origin. Implemented: a paginated movie catalog, title search, an inclusive minimum-rating filter, and movie details with direct UI links. QA writes their own tests using `pytest` and `requests`; no ready-made QA tests or exercise solutions are included.
 
 ## Installation and startup
 
@@ -69,7 +69,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 unset DATA_SOURCE TMDB_READ_TOKEN
 ```
 
-The backend calls TMDB `GET /3/discover/movie` with `include_adult=false`, `language=en-US`, `sort_by=popularity.desc`, and the requested page. An optional `min_rating` is forwarded as `vote_average.gte` before pagination. Details use `GET /3/movie/{movie_id}` with `language=en-US`. The token is sent only in the server-side Authorization header. The HTTP timeout is 10 seconds per upstream request; recovering totals for a rejected page may require a second request. Without a token in TMDB mode, `/api/movies` returns a safe `502`, while `/api/health` continues to return `200`. There is no automatic fallback to fixture data.
+The backend calls TMDB `GET /3/discover/movie` with `include_adult=false`, `language=en-US`, `sort_by=popularity.desc`, and the requested page. An optional `min_rating` is forwarded as `vote_average.gte` before pagination. A nonblank `query` instead uses `/3/search/movie` with the trimmed title query, `include_adult=false`, `language=en-US` and the requested page. Search cannot be combined with `min_rating` (422); blank queries mean no search. TMDB controls its search matching and order, whereas fixture mode uses a case-insensitive literal title substring. Details use `GET /3/movie/{movie_id}` with `language=en-US`. The token is sent only in the server-side Authorization header. The HTTP timeout is 10 seconds per upstream request; recovering totals for a rejected page may require a second request. Without a token in TMDB mode, `/api/movies` returns a safe `502`, while `/api/health` continues to return `200`. There is no automatic fallback to fixture data.
 
 ## Endpoints and manual examples
 
@@ -80,6 +80,8 @@ curl -i http://localhost:8000/api/health             # 200, {"status":"ok"}
 curl -i http://localhost:8000/api/movies             # 200, 20 movies in fixture mode
 curl -i 'http://localhost:8000/api/movies?min_rating=8' # 200, 11 fixture movies
 curl -i 'http://localhost:8000/api/movies?min_rating=11' # 422
+curl -i 'http://localhost:8000/api/movies?query=coast'  # 200, fixture movie 1025
+curl -i 'http://localhost:8000/api/movies?query=coast&min_rating=8' # 422, incompatible
 curl -i http://localhost:8000/api/movies/1001        # 200, single movie object
 curl -i http://localhost:8000/api/movies/999999      # 404
 curl -i http://localhost:8000/api/movies/abc         # 422
@@ -97,7 +99,9 @@ Fixture mode contains exactly 25 fictional movies in a fixed order, with IDs 100
 
 ### Using the new UI
 
-Set **Minimum rating** (0–10) and choose **Apply filter**. Leave it blank or choose **Reset** for all ratings. Applying or resetting starts at page 1; pagination retains the filter. Click a movie title to open its full description, ID, release date, rating and vote count. **Back to catalog** restores the applied filter and page. Catalog URLs and `/movies/1001` can be shared or opened directly.
+Enter a title in **Search by title** and choose **Apply**. While the search field is nonblank, the rating input is disabled with an explanation; applying the search clears any rating. Clear the search to enable rating again. **Reset** clears both fields. Search is submitted only on Apply/Enter, not while typing.
+
+Alternatively, set **Minimum rating** (0–10) and choose **Apply**. Leave it blank or choose **Reset** for all ratings. Applying or resetting starts at page 1; pagination retains the applied search or rating filter. Click a movie title to open its full description, ID, release date, rating and vote count. **Back to catalog** restores the applied search or rating filter and page. Catalog URLs and `/movies/1001` can be shared or opened directly.
 
 ## Repository structure
 
@@ -124,6 +128,7 @@ docs/CHANGES.md
 docs/SMOKE_CHECK.md
 tests/
   api/                    # QA-authored API tests
+  developer/              # Developer regression checks with fixture/mocked upstream
   ui/.gitkeep             # Placeholder for QA-authored UI tests
 PRODUCT.md
 DESIGN.md
@@ -140,7 +145,7 @@ Empty `__init__.py` files identify Python packages. Install the project in edita
 
 QA uses the public contract, HTTP API, and UI. The `tests/api/` and `tests/ui/` directories are placeholders; QA adds their own dependencies and tests. Use fixture mode for deterministic checks and TMDB for external integration smoke checks. Bug reports should include the environment, reproduction steps, expected and actual results, and the HTTP response. The developer submits small PRs with acceptance criteria; QA independently adds regression coverage.
 
-Search, sorting, favorites, and authorization are **not implemented**. Each future iteration requires a separate PR and updates to API_CONTRACT and CHANGES; see the [ROADMAP](docs/ROADMAP.md).
+Sorting, favorites, and authorization are **not implemented**. Each future iteration requires a separate PR and updates to API_CONTRACT and CHANGES; see the [ROADMAP](docs/ROADMAP.md).
 
 ## Credits / About
 

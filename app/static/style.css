@@ -52,13 +52,15 @@ footer p { max-width: 75ch; margin: 10px 0; }
 .tmdb-credit { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; }
 .tmdb-credit img { display: block; width: 110px; height: auto; }
 .rating-filter { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-block: 24px; }
-.filter-field { display: flex; flex-direction: column; gap: 4px; }
+.filter-field { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+.filter-field.search-field input { width: 280px; }
+.filter-field input { max-width: 100%; }
 .filter-field label { font-size: 14px; font-weight: 600; }
 .filter-field span { font-size: 13px; color: var(--muted); }
 .filter-field input { width: 180px; min-height: 44px; padding: 8px 12px; font: inherit; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 4px; caret-color: var(--accent); }
 .filter-field input::placeholder { color: var(--muted); opacity: 1; }
 .filter-field input:disabled { background: #edf0f3; }
-.rating-filter button { margin-bottom: 24px; }
+.filter-actions { display: flex; gap: 12px; margin-bottom: 24px; }
 .back-link { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 16px; }
 #detail-heading { font-size: 28px; overflow-wrap: anywhere; }
 .movie-detail { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr); gap: 32px; margin-top: 24px; }
