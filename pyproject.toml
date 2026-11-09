@@ -15,5 +15,12 @@ dependencies = [
   "python-dotenv>=1.0,<2",
 ]
 
+[project.optional-dependencies]
+qa = [
+  "pytest>=8",
+  "requests>=2.32",
+  "pytest-playwright>=0.7",
+]
+
 [tool.setuptools.packages.find]
 include = ["app*"]
