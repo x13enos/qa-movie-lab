@@ -164,3 +164,13 @@ Official resources:
 - [Approved logos and attribution](https://www.themoviedb.org/about/logos-attribution)
 
 Before using TMDB beyond this learning project, review its current terms and licensing requirements.
+
+## UI tests (Playwright)
+
+```bash
+python -m pip install -e '.[qa]'
+playwright install chromium
+pytest tests/ui
+```
+
+`tests/ui/conftest.py` starts the app itself on a free port (the `base_url` fixture), so no manual server start is needed for UI tests. Add `--headed` to watch the browser.
